@@ -1,15 +1,25 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 // http get request example
+
+// {"page":"words","input":"word1","words":["word1"]}
+
+type Words struct {
+	Page  string   `json:"page"`
+	Input string   `json:"input"`
+	Words []string `json:"words"`
+}
 
 func main() {
 	args := os.Args
@@ -38,5 +48,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("HTTP status code: %d\nBody: %s\n", res.StatusCode, body)
+	if res.StatusCode != 200 {
+		fmt.Printf("Invalid output (HTTP code %d): %s\n", res.StatusCode, body)
+		os.Exit(1)
+	}
+
+	var words Words
+
+	err = json.Unmarshal(body, &words)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("JSON Parsed\nPage: %s\nWords: %v\n", words.Page, strings.Join(words.Words, ", "))
 }
